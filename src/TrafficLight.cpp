@@ -14,7 +14,7 @@ T MessageQueue<T>::receive()
   std::unique_lock<std::mutex> lck(_mutex);
   _condition.wait(lck, [this] { return !_queue.empty(); });
   T msg = std::move(_queue.back());
-  _queue.clear();
+  _queue.pop_back();
   return msg;
 }
 
@@ -77,19 +77,20 @@ void TrafficLight::cycleThroughPhases()
   auto timeOfCurrentCycle = std::chrono::system_clock::now();
   std::default_random_engine generator;
   std::uniform_int_distribution<int> distribution(4000, 6000);
-  int cycleTime;
+  int cycleTime =  distribution(generator);
   while (true) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
     timeOfCurrentCycle = std::chrono::system_clock::now();
     long time = std::chrono::duration_cast<std::chrono::milliseconds>(timeOfCurrentCycle - timeOfLastCycle).count();
     // std::cout << time << std::endl;
-    cycleTime =  distribution(generator);
     if (time >= cycleTime) {
-      timeOfLastCycle = std::chrono::system_clock::now();
+      
       if (_currentPhase == TrafficLightPhase::red) {
         _currentPhase = TrafficLightPhase::green;
+        timeOfLastCycle = std::chrono::system_clock::now();
       } else {
         _currentPhase = TrafficLightPhase::red;
+        timeOfLastCycle = std::chrono::system_clock::now();
       }
       messageQueue.send(std::move(_currentPhase));
     }
