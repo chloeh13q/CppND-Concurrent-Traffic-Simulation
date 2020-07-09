@@ -13,7 +13,7 @@ T MessageQueue<T>::receive()
     // The received object should then be returned by the receive function. 
   std::unique_lock<std::mutex> lck(_mutex);
   _condition.wait(lck, [this] { return !_queue.empty(); });
-  T msg = std::move(_queue.front());
+  T msg = std::move(_queue.back());
   _queue.clear();
   return msg;
 }
@@ -46,11 +46,11 @@ void TrafficLight::waitForGreen()
   while (true) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
     TrafficLightPhase phase = messageQueue.receive();
-    if (phase == TrafficLightPhase::green) {
+    if (phase == TrafficLightPhase::red) {
+      std::cout << "Light is red." << std::endl;
+    } else {
       std::cout << "Light is green." << std::endl;
       break;
-    } else {
-      std::cout << "Light is red." << std::endl;
     }
   }
 }
